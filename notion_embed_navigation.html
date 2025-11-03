@@ -29,6 +29,8 @@
         #iframe-container {
             flex-grow: 1; /* iframeコンテナが利用可能なスペースをすべて占める */
             position: relative;
+            /* Notion側の読み込みエラーメッセージを非表示にするために背景を白にしておく */
+            background-color: #ffffff; 
         }
         #notion-iframe {
             width: 100%;
@@ -85,13 +87,12 @@
         // ユーザー設定エリア
         // =================================================================
 
-        // 1. Notionのデータベース公開URLを設定してください
-        // このURLは、ビューをフィルタリングする前の「すべて」のデータが表示された状態のリンクである必要があります。
-        // !!重要!! URL末尾の `?v=...` のビューIDは削除し、純粋な公開ページIDのみにしてください。
-        const BASE_NOTION_URL = "https://mint-headlight-c47.notion.site/e3dfdc3f07e746af9076ecafd868f02f"; 
+        // 1. NotionのデータベースIDを設定してください。
+        // 元のURL: https://mint-headlight-c47.notion.site/e3dfdc3f07e746af9076ecafd868f02f
+        // ページIDのみを抽出: e3dfdc3f07e746af9076ecafd868f02f
+        const NOTION_PAGE_ID = "e3dfdc3f07e746af9076ecafd868f02f"; 
         
         // 2. Notionの「タグ/カテゴリ」プロパティの選択肢を設定してください
-        // ここに表示したいカテゴリ名を正確に入力してください。
         const NOTION_TAGS = [
             "寒色系",
             "暖色系",
@@ -102,7 +103,6 @@
         ];
 
         // 3. NotionのデータベースURLの末尾にあるビューIDを設定してください
-        // URLの末尾にある `?v=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` の部分です。
         const VIEW_ID = "5cbfc69b6d6a4eadbdae06703ffe9b4f"; 
 
         // =================================================================
@@ -112,31 +112,33 @@
         const iframeContainer = document.getElementById('iframe-container');
         const filterContainer = document.getElementById('category-filters');
         const viewContainer = document.getElementById('view-toggles');
-        let currentTag = 'all'; // 現在選択されているタグ
-        let currentView = 'grid'; // 現在選択されているビュー
-
-        // !!重要!!
-        // NotionのURLに直接カスタムフィルタを付与する機能は非常に難しいため、
-        // 現状のコードはボタンの見た目の切り替えと、Notionビューの再読み込みのみを行います。
-        // フィルタリングを機能させるには、Notion内でカテゴリごとのビュー（例: 寒色系ビュー）を
-        // 事前に作成し、以下の generateNotionUrl 関数をそのビューのURLに切り替えるように
-        // 修正する必要があります。
+        let currentTag = 'all'; 
+        let currentView = 'grid'; 
 
         /**
          * Notion埋め込みURLを生成する
-         * @param {string} tag - フィルタリングするタグ名 ('all'の場合はフィルタリングなし)
-         * @param {string} viewMode - 読み込むビューモード (現在は未使用)
          * @returns {string} - Notionの埋め込みURL
          */
-        function generateNotionUrl(tag, viewMode) {
-            // ベースURLにビューIDを付与して返します。
-            // 💡 修正点: BASE_NOTION_URLにはビューIDを含めず、ここで一度だけ付与するように修正
-            let url = `${BASE_NOTION_URL}?v=${VIEW_ID}`;
+        function generateNotionUrl() {
+            // NotionのIFrame埋め込み専用形式を使用
+            let url = `https://www.notion.so/embed/${NOTION_PAGE_ID}`;
             
-            // フィルタリングは機能しませんが、ボタンのデータはURLに追加してデバッグ用とします。
-            // Notionがこのダミーパラメータを無視してくれることを期待します。
-            if (tag !== 'all') {
-                url += `&custom_tag_filter=${encodeURIComponent(tag)}`;
+            // ビューIDをクエリパラメータとして付与
+            let queryParams = [];
+            if (VIEW_ID) {
+                queryParams.push(`v=${VIEW_ID}`);
+            }
+
+            // 💡 修正点: NotionにIFrame内での表示を強制させるためのパラメータを追加
+            queryParams.push(`embed=true`);
+
+            // デバッグ情報
+            if (currentTag !== 'all' || currentView !== 'grid') {
+                 queryParams.push(`custom_tag=${encodeURIComponent(currentTag)}`, `custom_view=${currentView}`);
+            }
+
+            if (queryParams.length > 0) {
+                url += `?${queryParams.join('&')}`;
             }
             
             return url;
@@ -144,11 +146,9 @@
 
         /**
          * iframeを再構築してNotionのコンテンツを読み込む
-         * @param {string} tag - 読み込むタグ
-         * @param {string} viewMode - 読み込むビューモード
          */
-        function loadNotionIframe(tag, viewMode) {
-            const url = generateNotionUrl(tag, viewMode);
+        function loadNotionIframe() {
+            const url = generateNotionUrl();
             
             // 既存のiframeを削除
             iframeContainer.innerHTML = '';
@@ -158,6 +158,10 @@
             iframe.id = 'notion-iframe';
             iframe.src = url;
             iframe.title = 'Notion Embedded Content';
+            
+            // 💡 修正点: `allow-scripts` 属性を追加し、Notionコンテンツの動作を許可
+            iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms'); 
+            
             iframeContainer.appendChild(iframe);
             
             console.log("Notion Iframe Loaded with URL:", url);
@@ -190,7 +194,7 @@
             target.classList.add('btn-active');
 
             // iframeを再読み込み
-            loadNotionIframe(currentTag, currentView);
+            loadNotionIframe(); 
         }
 
         /**
@@ -207,7 +211,7 @@
             target.classList.add('btn-active');
             
             // iframeを再読み込み
-            loadNotionIframe(currentTag, currentView);
+            loadNotionIframe();
         }
 
         // ページの初期化処理
@@ -216,16 +220,15 @@
             renderCategoryFilters();
             
             // 最初のURLでiframeを読み込む（すべて/グリッド）
-            loadNotionIframe(currentTag, currentView);
+            loadNotionIframe();
 
             // イベントリスナーの設定
             filterContainer.addEventListener('click', handleFilterClick);
             viewContainer.addEventListener('click', handleViewClick);
             
             // 【重要】未設定の警告
-            if (BASE_NOTION_URL === "YOUR_NOTION_SHARE_URL_HERE") {
-                // Not a valid alert() call.
-                console.error("Notionの公開URLが設定されていません。JS内の BASE_NOTION_URL を更新してください。");
+            if (NOTION_PAGE_ID === "YOUR_NOTION_PAGE_ID_HERE") {
+                console.error("NotionのページIDが設定されていません。JS内の NOTION_PAGE_ID を更新してください。");
             }
         };
 
