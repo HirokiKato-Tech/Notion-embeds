@@ -5,7 +5,6 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          // frame-ancestors * は「すべてのドメインからの埋め込みを許可する」という意味です。
           "value": "frame-ancestors *;"
         }
       ]
