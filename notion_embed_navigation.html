@@ -90,7 +90,7 @@
         // 1. NotionのデータベースIDを設定してください。
         // 元のURL: https://mint-headlight-c47.notion.site/e3dfdc3f07e746af9076ecafd868f02f
         // ページIDのみを抽出: e3dfdc3f07e746af9076ecafd868f02f
-        const NOTION_PAGE_ID = "e3dfdc3f07e746af9076ecafd868f02f"; 
+        const NOTION_BASE_URL = "https://mint-headlight-c47.notion.site/ebd/e3dfdc3f07e746af9076ecafd868f02f"; 
         
         // 2. Notionの「タグ/カテゴリ」プロパティの選択肢を設定してください
         const NOTION_TAGS = [
@@ -115,35 +115,35 @@
         let currentTag = 'all'; 
         let currentView = 'grid'; 
 
-        /**
-         * Notion埋め込みURLを生成する
-         * @returns {string} - Notionの埋め込みURL
-         */
-        function generateNotionUrl() {
-            // NotionのIFrame埋め込み専用形式を使用
-            let url = `https://www.notion.so/embed/${NOTION_PAGE_ID}`;
-            
-            // ビューIDをクエリパラメータとして付与
-            let queryParams = [];
-            if (VIEW_ID) {
-                queryParams.push(`v=${VIEW_ID}`);
-            }
+    /**
+    * Notion埋め込みURLを生成する
+    * @returns {string} - Notionの埋め込みURL
+    */
+       function generateNotionUrl() {
+       // 【修正後のコード】ベースURLとビューIDを使用
+             let url = NOTION_BASE_URL;
 
-            // 💡 修正点: NotionにIFrame内での表示を強制させるためのパラメータを追加
-            queryParams.push(`embed=true`);
+       // ビューIDをクエリパラメータとして付与
+             let queryParams = [];
+             if (VIEW_ID) {
+                 queryParams.push(`v=${VIEW_ID}`);
+             }
 
-            // デバッグ情報
-            if (currentTag !== 'all' || currentView !== 'grid') {
-                 queryParams.push(`custom_tag=${encodeURIComponent(currentTag)}`, `custom_view=${currentView}`);
-            }
+    // NotionにIFrame内での表示を強制させるためのパラメータを追加（元々含まれているはずですが念のため）
+             queryParams.push(`embed=true`);
 
-            if (queryParams.length > 0) {
-                url += `?${queryParams.join('&')}`;
-            }
-            
-            return url;
-        }
+    // デバッグ情報 (カスタムフィルタのロジックは生かします)
+             if (currentTag !== 'all' || currentView !== 'grid') {
+                  queryParams.push(`custom_tag=${encodeURIComponent(currentTag)}`, `custom_view=${currentView}`);
+             }
 
+             if (queryParams.length > 0) {
+        // ベースURLに既にクエリパラメータが含まれていないため、ここでは ? を使用
+                 url += `?${queryParams.join('&')}`;
+             }
+
+             return url;
+         }
         /**
          * iframeを再構築してNotionのコンテンツを読み込む
          */
