@@ -159,8 +159,11 @@
             iframe.src = url;
             iframe.title = 'Notion Embedded Content';
             
-            // 💡 修正点: `allow-scripts` 属性を追加し、Notionコンテンツの動作を許可
-            iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms'); 
+　　　　　　　// iframeのsandbox属性に不足している権限を追加
+　　　　　　　iframe.setAttribute(
+　　　　　　　    'sandbox',
+　　　　　　　    'allow-scripts allow-same-origin allow-popups allow-forms **allow-modals allow-pointer-lock allow-presentation allow-top-navigation-by-user-activation allow-downloads**'
+　　　　　　　);
             
             iframeContainer.appendChild(iframe);
             
