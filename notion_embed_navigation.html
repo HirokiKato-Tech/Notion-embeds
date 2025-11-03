@@ -87,7 +87,8 @@
 
         // 1. Notionのデータベース公開URLを設定してください
         // このURLは、ビューをフィルタリングする前の「すべて」のデータが表示された状態のリンクである必要があります。
-        const BASE_NOTION_URL = "https://www.notion.so/e3dfdc3f07e746af9076ecafd868f02f?v=5cbfc69b6d6a4eadbdae06703ffe9b4f&source=copy_link"; 
+        // !!重要!! URL末尾の `?v=...` のビューIDは削除し、純粋な公開ページIDのみにしてください。
+        const BASE_NOTION_URL = "https://mint-headlight-c47.notion.site/e3dfdc3f07e746af9076ecafd868f02f"; 
         
         // 2. Notionの「タグ/カテゴリ」プロパティの選択肢を設定してください
         // ここに表示したいカテゴリ名を正確に入力してください。
@@ -102,8 +103,7 @@
 
         // 3. NotionのデータベースURLの末尾にあるビューIDを設定してください
         // URLの末尾にある `?v=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` の部分です。
-        // これがない場合、フィルタリングが機能しない可能性があります。
-        const VIEW_ID = "5cbfc69b6d6a4eadbdae06703ffe9b4f"; // 例: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        const VIEW_ID = "5cbfc69b6d6a4eadbdae06703ffe9b4f"; 
 
         // =================================================================
         // アプリケーションロジック
@@ -115,48 +115,31 @@
         let currentTag = 'all'; // 現在選択されているタグ
         let currentView = 'grid'; // 現在選択されているビュー
 
+        // !!重要!!
+        // NotionのURLに直接カスタムフィルタを付与する機能は非常に難しいため、
+        // 現状のコードはボタンの見た目の切り替えと、Notionビューの再読み込みのみを行います。
+        // フィルタリングを機能させるには、Notion内でカテゴリごとのビュー（例: 寒色系ビュー）を
+        // 事前に作成し、以下の generateNotionUrl 関数をそのビューのURLに切り替えるように
+        // 修正する必要があります。
+
         /**
          * Notion埋め込みURLを生成する
          * @param {string} tag - フィルタリングするタグ名 ('all'の場合はフィルタリングなし)
+         * @param {string} viewMode - 読み込むビューモード (現在は未使用)
          * @returns {string} - Notionの埋め込みURL
          */
         function generateNotionUrl(tag, viewMode) {
-            let url = BASE_NOTION_URL;
+            // ベースURLにビューIDを付与して返します。
+            // 💡 修正点: BASE_NOTION_URLにはビューIDを含めず、ここで一度だけ付与するように修正
+            let url = `${BASE_NOTION_URL}?v=${VIEW_ID}`;
             
-            // ビューIDを追加（これがURLの末尾にあることを想定）
-            if (VIEW_ID) {
-                url += `?v=${VIEW_ID}`;
-            }
-
-            // タグによるフィルタリング
+            // フィルタリングは機能しませんが、ボタンのデータはURLに追加してデバッグ用とします。
+            // Notionがこのダミーパラメータを無視してくれることを期待します。
             if (tag !== 'all') {
-                // NotionのURLエンコードルールに従ってフィルタリングパラメーターを追加
-                // 複数のフィルタリング条件を `&f` パラメータに追加する形式は複雑なため、
-                // この実装では単純なタグ（単一フィルタ）に基づいて `f` パラメータを構築します。
-                
-                // Notionのフィルタは非常に複雑なJSON形式を使用するため、
-                // 実際にはユーザーが手動でNotionでフィルタを設定し、
-                // その結果生成されたフィルタリング済みのURL全体を貼り付けるのが最も確実です。
-                
-                // ここでは、URLの最後にタグ名とビューモードをクエリとして追加する形にします。
-                // 実際のフィルタリングは、Notionのビュー設定で事前に済ませておくことを強く推奨します。
-                
-                // **【重要】Notionの埋め込みフィルタの注意点:**
-                // Notion埋め込みのフィルタリングは、URL内の複雑なJSON構造（`&f=...`）に依存します。
-                // JavaScriptでこのJSONを動的に生成するのは困難でエラーになりやすいため、
-                // **ユーザーがNotion内でカテゴリごとにビューを作成し、それぞれのビューの共有URLを
-                // このJSの配列に設定し直す方が確実です**。
-                
-                // *今回は、ユーザーがNotion内でフィルタリングされたビューを事前に作成し、
-                // BASE_NOTION_URLをそのカテゴリビューのURLに動的に置き換えるという、より単純で確実な方法を採用します。*
-
-                // 代わりに、ユーザーにNotionで事前にビューを作成してもらい、
-                // タグ名をURLに追加してiframeのリフレッシュを促します。（Notion側でのカスタム設定が必要）
-                return `${BASE_NOTION_URL}&tag=${encodeURIComponent(tag)}&view=${viewMode}`;
+                url += `&custom_tag_filter=${encodeURIComponent(tag)}`;
             }
             
-            // 'all' の場合はベースURLとビューモードのみ
-            return `${BASE_NOTION_URL}&view=${viewMode}`;
+            return url;
         }
 
         /**
@@ -241,7 +224,7 @@
             
             // 【重要】未設定の警告
             if (BASE_NOTION_URL === "YOUR_NOTION_SHARE_URL_HERE") {
-                alert("Notionの公開URLが設定されていません。JS内の BASE_NOTION_URL を更新してください。");
+                // Not a valid alert() call.
                 console.error("Notionの公開URLが設定されていません。JS内の BASE_NOTION_URL を更新してください。");
             }
         };
