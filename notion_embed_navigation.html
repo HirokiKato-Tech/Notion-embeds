@@ -92,7 +92,16 @@
         // ページIDのみを抽出: e3dfdc3f07e746af9076ecafd868f02f
         const NOTION_BASE_URL = "https://mint-headlight-c47.notion.site/ebd/e3dfdc3f07e746af9076ecafd868f02f"; 
 
-
+        const VIEW_MAP = {
+            // 【重要】「すべて」ボタンが指すデフォルトビューのID
+            "all": "5cbfc69b6d6a4eadbdae06703ffe9b4f", 
+             // Notionで新しく作成したフィルタ済みビューのIDをここに設定
+            "寒色系": "2a1c1f65e39880c28f01000c353bae14", // ← 寒色系ビューのURLから取得
+            "暖色系": "2a1c1f65e398800d9c2a000c7aedf618", // ← 暖色系ビューのURLから取得
+            "ゾーン良好": "2a1c1f65e39880329729000cda2bd951", // ← ゾーン良好ビューのURLから取得
+            "三分割": "2a1c1f65e398803b9e5f000c242a5231"
+            // ... 必要なタグ分追加
+        };
         // 2. Notionの「タグ/カテゴリ」プロパティの選択肢を設定してください
         const NOTION_TAGS = [
             "寒色系",
