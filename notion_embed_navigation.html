@@ -130,28 +130,38 @@
        function generateNotionUrl() {
        // 【修正後のコード】ベースURLとビューIDを使用
              let url = NOTION_BASE_URL;
-
-       // ビューIDをクエリパラメータとして付与
-             let queryParams = [];
-             if (VIEW_ID) {
-                 queryParams.push(`v=${VIEW_ID}`);
-             }
-
-    // NotionにIFrame内での表示を強制させるためのパラメータを追加（元々含まれているはずですが念のため）
-             queryParams.push(`embed=true`);
-
-    // デバッグ情報 (カスタムフィルタのロジックは生かします)
-             if (currentTag !== 'all' || currentView !== 'grid') {
-                  queryParams.push(`custom_tag=${encodeURIComponent(currentTag)}`, `custom_view=${currentView}`);
-             }
-
-             if (queryParams.length > 0) {
-        // ベースURLに既にクエリパラメータが含まれていないため、ここでは ? を使用
-                 url += `?${queryParams.join('&')}`;
-             }
-
-             return url;
-         }
+           let queryParams = [];
+           
+           // 1. 現在選択されているタグに対応するビューIDを取得
+           const targetViewId = VIEW_MAP[currentTag]; 
+           
+    // 2. ターゲットビューIDが存在すれば、それをURLに追加
+           if (targetViewId) {
+               // Notionのフィルタはクエリパラメータ 'v' でビューIDを渡します。
+               queryParams.push(`v=${targetViewId}`);
+           } else if (currentTag !== 'all') {
+               console.error(`Error: View ID not found for tag: ${currentTag}`);
+               // もしIDが定義されていなければ、デフォルトに戻るなどの処理ができますが、
+               // ここではエラーログのみ出力します。
+           }
+           
+           // 埋め込みパラメータ（維持）
+           queryParams.push(`embed=true`);
+           
+           // デバッグ情報（維持）
+           if (currentTag !== 'all' || currentView !== 'grid') {
+               // 注意：Notionの埋め込みURLはこのカスタムパラメータ（custom_tag, custom_view）を無視します。
+               // これはデバッグ用としてそのまま残しておきます。
+               queryParams.push(`custom_tag=${encodeURIComponent(currentTag)}`, `custom_view=${currentView}`);
+           }
+           
+           if (queryParams.length > 0) {
+               url += `?${queryParams.join('&')}`;
+           }
+           
+           console.log("Loading URL:", url);
+           return url;
+       }
         /**
          * iframeを再構築してNotionのコンテンツを読み込む
          */
