@@ -91,13 +91,32 @@
             "三分割": "2a1c1f65e398803b9e5f000c242a5231"
             // ... 必要なタグ分追加
         };
-        // 2. Notionの「タグ/カテゴリ」プロパティの選択肢を設定してください
-        const NOTION_TAGS = [
-            "寒色系",
-            "暖色系",
-            "ゾーン良好",
-            "三分割"
-        ];
+        // 2. タグとビューIDのマッピングを、カテゴリ別に多階層化します (UI設計に合わせる)
+        const CATEGORY_MAP = {
+            "色": {
+                icon: "🎨",
+                tags: {
+                    "寒色系": { viewId: VIEW_MAP["寒色系"], count: "289枚" },
+                    "暖色系": { viewId: VIEW_MAP["暖色系"], count: "342枚" },
+                }
+            },
+            "構図": {
+                icon: "📐",
+                tags: {
+                    "ゾーン良好": { viewId: VIEW_MAP["ゾーン良好"], count: "412枚" },
+                    "三分割": { viewId: VIEW_MAP["三分割"], count: "298枚" },
+                }
+            },
+            "被写体": {
+                icon: "👤",
+                tags: {
+                    "Person": { viewId: VIEW_MAP["Person"], count: "412枚" },
+                    "Nature": { viewId: VIEW_MAP["Nature"], count: "298枚" },
+                }
+            }
+        };
+        // 旧2. Notionの「タグ/カテゴリ」プロパティの選択肢を設定してください
+        //const NOTION_TAGS = ["寒色系","暖色系","ゾーン良好","三分割"];
 
         // 3. NotionのデータベースURLの末尾にあるビューIDを設定してください
         const VIEW_ID = "5cbfc69b6d6a4eadbdae06703ffe9b4f"; 
@@ -146,9 +165,9 @@
         // アプリケーションロジック
         // =================================================================
 
-        const iframeContainer = document.getElementById('iframe-container');
-        const filterContainer = document.getElementById('category-filters');
-        const viewContainer = document.getElementById('view-toggles');
+        //const iframeContainer = document.getElementById('iframe-container');
+        //const filterContainer = document.getElementById('category-filters');
+        //const viewContainer = document.getElementById('view-toggles');
         let currentTag = 'all'; 
         let currentView = 'grid'; 
 
@@ -242,53 +261,113 @@
         /**
          * フィルタボタンのクリックイベントハンドラ
          */
-        function handleFilterClick(event) {
-            const target = event.target.closest('.filter-btn');
-            if (!target) return;
+        //function handleFilterClick(event) {
+        //    const target = event.target.closest('.filter-btn');
+        //    if (!target) return;
 
-            currentTag = target.dataset.tag;
+        //    currentTag = target.dataset.tag;
             
             // アクティブクラスを切り替える
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('btn-active'));
-            target.classList.add('btn-active');
+        //    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('btn-active'));
+       //     target.classList.add('btn-active');
 
-            // iframeを再読み込み
-            loadNotionIframe(); 
-        }
+        //    // iframeを再読み込み
+        //    loadNotionIframe(); 
+        //}
 
         /**
          * ビュー切り替えボタンのクリックイベントハンドラ
          */
-        function handleViewClick(event) {
-            const target = event.target.closest('.view-btn');
-            if (!target) return;
+        //function handleViewClick(event) {
+        //    const target = event.target.closest('.view-btn');
+        //    if (!target) return;
 
-            currentView = target.dataset.view;
+        //    currentView = target.dataset.view;
             
             // アクティブクラスを切り替える
-            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('btn-active'));
-            target.classList.add('btn-active');
+        //    document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('btn-active'));
+       //     target.classList.add('btn-active');
             
             // iframeを再読み込み
-            loadNotionIframe();
-        }
+        //    loadNotionIframe();
+        //}
+        // =================================================================
+        // 階層ナビゲーション
+        // =================================================================
 
+       // 第1階層タイルクリック: 第2階層へ移動
+       function goToCategory(category) {
+           // 1. 履歴に追加
+           viewHistory.push('view-2-tag'); 
+    
+           // 2. 第2階層のタグタイルを描画
+           renderTagView(category);
+    
+           // 3. 画面表示を切り替え
+           showView('view-2-tag');
+       }
+
+       // 第2階層タグクリック: 第3階層（Notion埋め込み）へ移動
+       function goToGrid(category, tagName) {
+           const targetData = CATEGORY_MAP[category].tags[tagName];
+    
+           if (!targetData) {
+               console.error(`Error: Data not found for tag: ${category} / ${tagName}`);
+               return;
+           }
+
+           // 1. 履歴に追加
+           viewHistory.push('view-3-embed');
+    
+           // 2. currentTag を更新し、loadNotionIframe()で対応するビューIDを読み込ませる
+           //    VIEW_MAP から targetData.viewId に対応するタグ名を逆引きできる必要があります。
+           //    VIEW_MAPのタグ名（例：'寒色系'）がそのままtagNameとして渡されていると仮定し、currentTagを更新
+           currentTag = tagName; 
+
+           // 3. iframeをロード
+           loadNotionIframe();
+
+           // 4. 画面表示を切り替え
+           showView('view-3-embed');
+       }
+
+       // 第2階層のタグタイルを描画する関数 (NEW)
+       function renderTagView(category) {
+           const tags = CATEGORY_MAP[category].tags;
+           const container = document.getElementById('view-2-tag');
+           container.innerHTML = ''; // 初期化
+
+           for (const tagName in tags) {
+               const data = tags[tagName];
+               // ⚡️ ここに第2階層のタグタイル（モザイク風）のHTMLを生成します
+               const tile = document.createElement('div');
+               tile.className = 'p-4 bg-gray-700 rounded-lg shadow-lg cursor-pointer hover:bg-gray-600 transition';
+               tile.innerHTML = `
+                   <h3 class="text-lg font-semibold">${data.icon || ''} ${tagName}</h3>
+                   <p class="text-sm text-gray-400">${data.count || ''}</p>
+               `;
+        
+               // クリックイベントを設定: 第3階層へ移動
+               tile.onclick = () => goToGrid(category, tagName);
+               
+               container.appendChild(tile);
+           }
+       }
+        
         // ページの初期化処理
         window.onload = function() {
             // カテゴリボタンの描画
-            //renderCategoryFilters();
+            renderCategoryView();
             
             // 最初のURLでiframeを読み込む（すべて/グリッド）
-            loadNotionIframe();
+            //loadNotionIframe();
 
             // イベントリスナーの設定
-            filterContainer.addEventListener('click', handleFilterClick);
-            viewContainer.addEventListener('click', handleViewClick);
+           // filterContainer.addEventListener('click', handleFilterClick);
+            //viewContainer.addEventListener('click', handleViewClick);
             
             // 【重要】未設定の警告
-            if (NOTION_PAGE_ID === "YOUR_NOTION_PAGE_ID_HERE") {
-                console.error("NotionのページIDが設定されていません。JS内の NOTION_PAGE_ID を更新してください。");
-            }
+            
         };
 
         // ページがiframe内で動作していることを検知するための簡易スクリプト
