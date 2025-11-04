@@ -369,7 +369,75 @@
             // 【重要】未設定の警告
             
         };
+        // =================================================================
+        // 画面遷移ロジック（追加・修正）
+        // =================================================================
 
+        let currentCategory = ''; // 現在選択されているカテゴリを保持
+        let currentTag = 'all'; // 現在選択されているタグを保持 ('all'はデフォルト)
+
+        // 第1階層タイルクリック: 第2階層へ移動
+        function goToCategory(category) {
+            // 1. 履歴に追加
+            viewHistory.push('view-2-tag'); 
+            currentCategory = category; // 現在のカテゴリを保存
+            
+            // 2. 第2階層のタグタイルを描画
+            renderTagView(category);
+    
+            // 3. 画面表示を切り替え
+            showView('view-2-tag');
+        }
+
+        // 第2階層タグクリック: 第3階層（Notion埋め込み）へ移動
+        function goToGrid(category, tagName) {
+            const targetData = CATEGORY_MAP[category].tags[tagName];
+    
+            if (!targetData || !targetData.viewId) {
+                console.error(`Error: View ID not found for tag: ${category} / ${tagName}`);
+                // Notionのデフォルトビューに戻す
+                currentTag = 'all'; 
+            } else {
+                // currentTag を更新し、loadNotionIframe()で対応するビューIDを読み込ませる
+                currentTag = tagName; 
+            }
+
+            // 1. 履歴に追加
+            viewHistory.push('view-3-embed');
+
+            // 2. iframeをロード
+            loadNotionIframe();
+
+            // 3. 画面表示を切り替え
+            showView('view-3-embed');
+        }
+
+        // 第2階層のタグタイルを描画する関数
+        function renderTagView(category) {
+            const tags = CATEGORY_MAP[category].tags;
+            const container = document.getElementById('view-2-tag');
+            container.innerHTML = ''; // 初期化
+
+            for (const tagName in tags) {
+                const data = tags[tagName];
+                // ⚡️ ここに第2階層のタグタイル（モザイク風）のHTMLを生成します
+                // UI設計に合わせて、詳細なスタイルを追加してください
+                const tile = document.createElement('div');
+                tile.className = 'p-4 bg-gray-700 rounded-lg shadow-lg cursor-pointer hover:bg-gray-600 transition';
+                tile.innerHTML = `
+                    <h3 class="text-xl font-semibold">${tagName}</h3>
+                    <p class="text-sm text-gray-400">${data.count || ''}</p>
+                `;
+                
+                // クリックイベントを設定: 第3階層へ移動
+                tile.onclick = () => goToGrid(category, tagName);
+                
+                container.appendChild(tile);
+            }
+        }
+
+
+        
         // ページがiframe内で動作していることを検知するための簡易スクリプト
         try {
             if (window.self !== window.top) {
