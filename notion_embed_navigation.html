@@ -22,7 +22,6 @@
             height: 100%;
             width: 100%;
         }
-        /* 旧 #navigation-bar のスタイルは不要 */
         /* #iframe-container のスタイルは #view-3-embed に置き換えられる */
         #view-3-embed { /* iframeコンテナとして流用 */
             flex-grow: 1; 
@@ -85,8 +84,8 @@
             "暖色系": "2a1c1f65e398800d9c2a000c7aedf618", // ← 暖色系ビューのURLから取得
             "ゾーン良好": "2a1c1f65e39880329729000cda2bd951", // ← ゾーン良好ビューのURLから取得
             "三分割": "2a1c1f65e398803b9e5f000c242a5231",
-            "Person": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // PersonビューIDを正確に設定
-            "Nature": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"  // NatureビューIDを正確に設定
+            "Person": "2a2c1f65e39880c987fa000c920ed2d1", // PersonビューIDを正確に設定
+            "Nature": "2a2c1f65e3988081a6c2000ce7c645c6"  // NatureビューIDを正確に設定
         };
         // 2. タグとビューIDのマッピングを、カテゴリ別に多階層化します (UI設計に合わせる)
         const CATEGORY_MAP = {
@@ -112,11 +111,7 @@
                 }
             }
         };
-        // 旧2. Notionの「タグ/カテゴリ」プロパティの選択肢を設定してください - 不要
-        //const NOTION_TAGS = ["寒色系","暖色系","ゾーン良好","三分割"];
-
-        // 3. NotionのデータベースURLの末尾にあるビューIDを設定してください - 不要
-        //const VIEW_ID = "5cbfc69b6d6a4eadbdae06703ffe9b4f"; 
+        // ... 旧変数は削除/コメントアウト済み
 
         // =================================================================
         // 新しいアプリケーションロジック
@@ -126,7 +121,6 @@
         let viewHistory = ['view-1-category']; // 画面履歴スタック
         let currentCategory = ''; // 現在選択されているカテゴリを保持
         let currentTag = 'all'; // 現在選択されているタグを保持 ('all'はデフォルト)
-        // const currentView = 'grid'; // 旧変数 currentView は上記の currentView で代用可能
 
         // 画面を切り替えるメイン関数
         function showView(viewName) {
@@ -162,7 +156,7 @@
             }
         }
         // =================================================================
-        // 画面遷移ロジック（追加・修正）
+        // 画面遷移ロジック
         // =================================================================
 
         // 第1階層タイルクリック: 第2階層へ移動
@@ -212,7 +206,7 @@
                 // ⚡️ ここに第2階層のタグタイル（モザイク風）のHTMLを生成します
                 const tile = document.createElement('div');
                 tile.className = 'p-4 bg-gray-700 rounded-lg shadow-lg cursor-pointer hover:bg-gray-600 transition';
-                // icon が CATEGORY_MAP の階層にあるため、ここでは表示しない
+                // icon は CATEGORY_MAP の階層にあるため、ここでは表示しない
                 tile.innerHTML = `
                     <h3 class="text-xl font-semibold">${tagName}</h3>
                     <p class="text-sm text-gray-400">${data.count || ''}</p>
@@ -220,7 +214,7 @@
         
                 // クリックイベントを設定: 第3階層へ移動
                 tile.onclick = () => goToGrid(category, tagName);
-                
+               
                 container.appendChild(tile);
             }
         }
@@ -228,8 +222,6 @@
         // =================================================================
         // アプリケーションロジック（Notion連携）
         // =================================================================
-
-        // const iframeContainer = document.getElementById('iframe-container'); // 旧変数。現在は使用しない
 
     /**
     * Notion埋め込みURLを生成する
@@ -255,10 +247,8 @@
            // 埋め込みパラメータ（維持）
            queryParams.push(`embed=true`);
            
-           // デバッグ情報（旧 currentView はコメントアウトしたため、ここでは固定値 'grid' を使用）
-           // if (currentTag !== 'all' || 'grid' !== 'grid') { // この条件は常に false になるため、デバッグ用としてそのまま残す
-           //     queryParams.push(`custom_tag=${encodeURIComponent(currentTag)}`, `custom_view=grid`);
-           // }
+           // デバッグ情報（維持）
+           // if (currentTag !== 'all' || 'grid' !== 'grid') { ... }
            
            if (queryParams.length > 0) {
                url += `?${queryParams.join('&')}`;
@@ -273,7 +263,7 @@
         function loadNotionIframe() {
             const url = generateNotionUrl();
             
-            // 【修正】view-3-embed を iframeContainer として使用
+            // view-3-embed を iframeContainer として使用
             const iframeContainer = document.getElementById('view-3-embed');
             
             // 既存のiframeを削除
@@ -285,11 +275,11 @@
             iframe.src = url;
             iframe.title = 'Notion Embedded Content';
             
-　　　　　　　// iframeのsandbox属性に不足している権限を追加
-　　　　　　　iframe.setAttribute(
-    　　　　　　　'sandbox',
-   　　　　　　　　'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-pointer-lock allow-presentation allow-top-navigation-by-user-activation allow-downloads'
-　　　　　　　);
+            // iframeのsandbox属性に不足している権限を追加
+            iframe.setAttribute(
+                'sandbox',
+                'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-pointer-lock allow-presentation allow-top-navigation-by-user-activation allow-downloads'
+            );
             
             iframeContainer.appendChild(iframe);
             
@@ -318,22 +308,10 @@
             showView('view-1-category'); 
         }
 
-        // 旧UIのクリックハンドラは削除またはコメントアウト済み（そのまま維持）
-        //function handleFilterClick(event) { ... }
-        //function handleViewClick(event) { ... }
-
         // ページの初期化処理
         window.onload = function() {
             // カテゴリボタンの描画を開始し、第1階層を表示
             renderCategoryView();
-            
-            // 旧ロジックはコメントアウト済み（そのまま維持）
-            //loadNotionIframe(); 
-            // filterContainer.addEventListener('click', handleFilterClick);
-            //viewContainer.addEventListener('click', handleViewClick);
-            
-            // 【重要】旧NOTION_PAGE_IDの警告は不要なため削除
-            
         };
 
         // ページがiframe内で動作していることを検知するための簡易スクリプト（そのまま維持）
